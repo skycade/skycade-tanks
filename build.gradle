@@ -1,0 +1,24 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'java'
+}
+
+project.ext.version = '1.0.0-SNAPSHOT'
+project.ext.package = 'net.skycade.tanks'
+
+group 'net.skycade'
+version project.ext.version
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation files('lib/skycade-server-runtime-1.0.0-SNAPSHOT.jar')
+}
+
+shadowJar {
+    archiveBaseName.set('skycade-tanks')
+    archiveClassifier.set('')
+    archiveVersion.set(project.ext.version)
+}
