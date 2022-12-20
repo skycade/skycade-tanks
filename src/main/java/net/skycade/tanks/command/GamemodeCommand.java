@@ -11,10 +11,23 @@ public class GamemodeCommand extends Command {
   public GamemodeCommand() {
     super("gamemode");
 
+    setCondition((sender, command) -> {
+      if (!(sender instanceof ConsoleSender)) {
+        if (command != null) {
+          Messenger.warn(sender, "You must be the console to use this command.");
+        }
+        return false;
+      }
+
+      return true;
+    });
+
     var playerArgument = ArgumentType.Word("player");
     var gamemodeArgument = ArgumentType.Word("gamemode");
 
-    addConditionalSyntax((sender, command) -> sender instanceof ConsoleSender, (sender, context) -> {
+    addSyntax((sender, context) ->
+
+    {
       var player = context.get(playerArgument);
       var gamemode = context.get(gamemodeArgument);
       var target = MinecraftServer.getConnectionManager().getPlayer(player);
@@ -29,11 +42,12 @@ public class GamemodeCommand extends Command {
         Messenger.warn(sender, "Invalid gamemode.");
       }
 
-      Messenger.info(sender,
-          "Set gamemode of " + target.getUsername() + " to " + gamemode + ".");
+      Messenger.info(sender, "Set gamemode of " + target.getUsername() + " to " + gamemode + ".");
     }, playerArgument, gamemodeArgument);
 
-    setDefaultExecutor((sender, context) -> {
+    setDefaultExecutor((sender, context) ->
+
+    {
       Messenger.warn(sender, "Usage: /gamemode <player> <gamemode>");
     });
   }

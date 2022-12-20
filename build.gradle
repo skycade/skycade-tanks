@@ -11,14 +11,25 @@ version project.ext.version
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://repo.spongepowered.org/repository/maven-public/"
+    }
 }
 
 dependencies {
-    implementation files('lib/skycade-server-runtime-1.0.0-SNAPSHOT.jar')
+    implementation files('libs/skycade-server-runtime-1.0.0-SNAPSHOT.jar')
+    implementation files('libs/NBStom-1.0.0.jar')
+    implementation "org.spongepowered:noise:2.0.0-SNAPSHOT"
 }
 
 shadowJar {
     archiveBaseName.set('skycade-tanks')
     archiveClassifier.set('')
     archiveVersion.set(project.ext.version)
+}
+
+jar {
+    manifest {
+        attributes('Main-Class': project.ext.package + '.SkycadeTanksBootstrapper')
+    }
 }
