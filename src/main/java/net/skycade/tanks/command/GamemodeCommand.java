@@ -25,9 +25,7 @@ public class GamemodeCommand extends Command {
     var playerArgument = ArgumentType.Word("player");
     var gamemodeArgument = ArgumentType.Word("gamemode");
 
-    addSyntax((sender, context) ->
-
-    {
+    addSyntax((sender, context) -> {
       var player = context.get(playerArgument);
       var gamemode = context.get(gamemodeArgument);
       var target = MinecraftServer.getConnectionManager().getPlayer(player);
