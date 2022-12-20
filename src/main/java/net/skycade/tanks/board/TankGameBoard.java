@@ -2,9 +2,11 @@ package net.skycade.tanks.board;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.skycade.tanks.physics.PhysicsObject;
+import net.skycade.tanks.physics.tank.TankObject;
 
 public class TankGameBoard {
 
@@ -24,6 +26,16 @@ public class TankGameBoard {
   private final List<PhysicsObject> physicsObjects;
 
   /**
+   * Player 1's tank.
+   */
+  private final UUID player1TankObjectId;
+
+  /**
+   * Player 2's tank.
+   */
+  private final UUID player2TankObjectId;
+
+  /**
    * Creates a new tank game board.
    *
    * @param bottomLeft the bottom left corner of the board.
@@ -32,6 +44,8 @@ public class TankGameBoard {
   public TankGameBoard(Pos bottomLeft, Pos topRight) {
     this.bottomLeft = bottomLeft;
     this.topRight = topRight;
+    this.player1TankObjectId = UUID.randomUUID();
+    this.player2TankObjectId = UUID.randomUUID();
 
     this.physicsObjects = new ArrayList<>();
   }
@@ -70,5 +84,58 @@ public class TankGameBoard {
    */
   public List<PhysicsObject> physicsObjects() {
     return physicsObjects;
+  }
+
+  /**
+   * Gets the player 1 tank object id.
+   *
+   * @return the player 1 tank object id.
+   */
+  public TankObject player1Tank() {
+    return physicsObjects.stream().filter(physicsObject -> physicsObject instanceof TankObject)
+        .map(physicsObject -> (TankObject) physicsObject)
+        .filter(physicsObject -> physicsObject.objectId().equals(player1TankObjectId)).findFirst()
+        .orElse(null);
+  }
+
+  /**
+   * Gets the player 2 tank.
+   *
+   * @return the player 2 tank.
+   */
+  public PhysicsObject player2Tank() {
+    return physicsObjects.stream().filter(physicsObject -> physicsObject instanceof TankObject)
+        .map(physicsObject -> (TankObject) physicsObject)
+        .filter(physicsObject -> physicsObject.objectId().equals(player2TankObjectId)).findFirst()
+        .orElse(null);
+  }
+
+  /**
+   * Gets the player 1 tank object id.
+   *
+   * @return the player 1 tank object id.
+   */
+  public UUID player1TankObjectId() {
+    return player1TankObjectId;
+  }
+
+  /**
+   * Gets the player 2 tank object id.
+   *
+   * @return the player 2 tank object id.
+   */
+  public UUID player2TankObjectId() {
+    return player2TankObjectId;
+  }
+
+  /**
+   * Gets the physics object colliding with the given physics object.
+   *
+   * @param physicsObject the physics object to check for collisions.
+   * @return the physics object colliding with the given physics object.
+   */
+  public List<PhysicsObject> getCollidingObjects(PhysicsObject physicsObject) {
+    return physicsObjects.stream().filter(physicsObject1 -> physicsObject1 != physicsObject)
+        .filter(physicsObject1 -> physicsObject1.collidesWith(physicsObject)).toList();
   }
 }

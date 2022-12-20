@@ -4,9 +4,11 @@ import dev.emortal.nbstom.NBS;
 import java.nio.file.Path;
 import java.util.UUID;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.InstanceTickEvent;
+import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.instance.AnvilLoader;
 import net.skycade.serverruntime.api.space.GameSpace;
@@ -25,9 +27,15 @@ public class TankGameSpace extends GameSpace {
    */
   private final GameSpaceTankGameBoardRenderer boardRenderer;
 
+  /**
+   * The board that is being rendered.
+   */
+  private final TankGameBoard board;
+
   public TankGameSpace(TankGameBoard board) {
     super(UUID.randomUUID(), FullbrightDimension.INSTANCE);
     this.boardRenderer = new GameSpaceTankGameBoardRenderer(this, board);
+    this.board = board;
   }
 
   @Override
@@ -53,6 +61,27 @@ public class TankGameSpace extends GameSpace {
       eventNode().addListener(InstanceTickEvent.class, event -> {
         boardRenderer.tick();
       });
+    });
+
+    eventNode().addListener(PlayerMoveEvent.class, event -> {
+      Pos oldPosition = event.getPlayer().getPosition();
+      Pos newPosition = event.getNewPosition();
+
+      // if the player moved in the x direction
+      if (oldPosition.x() != newPosition.x()) {
+        Vec velocity = board.player1Tank().velocity();
+
+        // if the player moved to the right
+        if (oldPosition.x() < newPosition.x()) {
+          // move the tank to the right
+          board.player1Tank().velocity(new Vec(0.2, velocity.y(), velocity.z()));
+        } else {
+          // move the tank to the left
+          board.player1Tank().velocity(new Vec(-0.2, velocity.y(), velocity.z()));
+        }
+
+        event.setCancelled(true);
+      }
     });
   }
 }

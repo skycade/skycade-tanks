@@ -2,7 +2,8 @@ package net.skycade.tanks.physics.ground;
 
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
-import net.skycade.tanks.physics.GravitationallyAffectedPhysicsObject;
+import net.skycade.tanks.board.TankGameBoard;
+import net.skycade.tanks.physics.PhysicsObject;
 
 /**
  * The ground object is responsible for representing the ground in the game. It is a physics object
@@ -11,7 +12,7 @@ import net.skycade.tanks.physics.GravitationallyAffectedPhysicsObject;
  *
  * @author Jacob Cohen
  */
-public class GroundObject extends GravitationallyAffectedPhysicsObject {
+public class GroundObject extends PhysicsObject {
 
   /**
    * The constructor for the physics object.
@@ -19,6 +20,11 @@ public class GroundObject extends GravitationallyAffectedPhysicsObject {
    * @param position the position of the object.
    */
   public GroundObject(Pos position) {
-    super(position, Vec.ZERO, Vec.ZERO, 1D);
+    super(position, Vec.ZERO, Vec.ZERO, 0.5D, 1D);
+  }
+
+  @Override
+  public void update(TankGameBoard board) {
+    // no-op
   }
 }

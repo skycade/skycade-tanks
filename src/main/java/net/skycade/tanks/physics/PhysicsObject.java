@@ -1,7 +1,9 @@
 package net.skycade.tanks.physics;
 
+import java.util.UUID;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.skycade.tanks.board.TankGameBoard;
 
 /**
  * This is an object that represents a physical object in the game. This includes the position,
@@ -9,7 +11,12 @@ import net.minestom.server.coordinate.Vec;
  *
  * @author Jacob Cohen
  */
-public class PhysicsObject {
+public abstract class PhysicsObject {
+
+  /**
+   * The object's id.
+   */
+  private final UUID objectId;
 
   /**
    * The position of the object.
@@ -36,18 +43,50 @@ public class PhysicsObject {
   private double mass;
 
   /**
+   * The radius of the object, in meters.
+   */
+  private final double radius;
+
+  /**
    * The constructor for the physics object.
    *
    * @param position     the position of the object.
    * @param velocity     the velocity of the object.
    * @param acceleration the acceleration of the object.
    * @param mass         the mass of the object.
+   * @param radius       the radius of the object.
    */
-  public PhysicsObject(Pos position, Vec velocity, Vec acceleration, double mass) {
+  public PhysicsObject(Pos position, Vec velocity, Vec acceleration, double mass, double radius) {
+    this(position, velocity, acceleration, mass, radius, UUID.randomUUID());
+  }
+
+  /**
+   * The constructor for the physics object.
+   *
+   * @param position     the position of the object.
+   * @param velocity     the velocity of the object.
+   * @param acceleration the acceleration of the object.
+   * @param mass         the mass of the object.
+   * @param objectId     the object's id.
+   * @param radius       the radius of the object.
+   */
+  public PhysicsObject(Pos position, Vec velocity, Vec acceleration, double mass, double radius,
+                       UUID objectId) {
+    this.objectId = objectId;
     this.position = position;
     this.velocity = velocity;
     this.acceleration = acceleration;
     this.mass = mass;
+    this.radius = radius;
+  }
+
+  /**
+   * Gets the object's id.
+   *
+   * @return the object's id.
+   */
+  public UUID objectId() {
+    return objectId;
   }
 
   /**
@@ -120,5 +159,41 @@ public class PhysicsObject {
    */
   public void mass(double mass) {
     this.mass = mass;
+  }
+
+  /**
+   * Get the radius of the object.
+   *
+   * @return the radius of the object.
+   */
+  public double radius() {
+    return radius;
+  }
+
+  /**
+   * Updates the object physics.
+   */
+  public void tickPhysics(TankGameBoard board) {
+    // update the velocity of the object based on the acceleration.
+    velocity = velocity.add(acceleration);
+    // update the position of the object based on the velocity.
+    position = position.add(velocity);
+    this.update(board);
+  }
+
+  /**
+   * Updates the physics object by applying the acceleration to the velocity, and the velocity to the
+   * position.
+   */
+  public abstract void update(TankGameBoard board);
+
+  /**
+   * If the object is colliding with another object.
+   *
+   * @param other the other object.
+   * @return if the object is colliding with another object.
+   */
+  public boolean collidesWith(PhysicsObject other) {
+    return this.position.distance(other.position) <= this.radius + other.radius;
   }
 }
