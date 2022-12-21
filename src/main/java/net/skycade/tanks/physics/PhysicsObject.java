@@ -176,9 +176,9 @@ public abstract class PhysicsObject {
   public void tickPhysics(TankGameBoard board) {
     // update the velocity of the object based on the acceleration.
     velocity = velocity.add(acceleration);
+    this.update(board);
     // update the position of the object based on the velocity.
     position = position.add(velocity);
-    this.update(board);
   }
 
   /**

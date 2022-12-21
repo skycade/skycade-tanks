@@ -1,7 +1,11 @@
 package net.skycade.tanks.physics.ground;
 
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.minestom.server.network.packet.server.play.ParticlePacket;
+import net.minestom.server.particle.Particle;
+import net.minestom.server.particle.ParticleCreator;
 import net.skycade.tanks.board.TankGameBoard;
 import net.skycade.tanks.physics.PhysicsObject;
 
@@ -20,7 +24,7 @@ public class GroundObject extends PhysicsObject {
    * @param position the position of the object.
    */
   public GroundObject(Pos position) {
-    super(position, Vec.ZERO, Vec.ZERO, 0.5D, 1D);
+    super(position, Vec.ZERO, Vec.ZERO, 1D, 0.5D);
   }
 
   @Override

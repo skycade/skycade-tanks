@@ -2,8 +2,12 @@ package net.skycade.tanks.physics.tank;
 
 import java.util.List;
 import java.util.UUID;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
+import net.minestom.server.network.packet.server.play.ParticlePacket;
+import net.minestom.server.particle.Particle;
+import net.minestom.server.particle.ParticleCreator;
 import net.skycade.tanks.board.TankGameBoard;
 import net.skycade.tanks.physics.GravitationallyAffectedPhysicsObject;
 import net.skycade.tanks.physics.PhysicsObject;
@@ -14,20 +18,12 @@ public class TankObject extends GravitationallyAffectedPhysicsObject {
   /**
    * The entity id that represents the tank.
    */
-  private UUID refId;
+  private UUID tankRefId;
 
   /**
-   * The constructor for the physics object.
-   *
-   * @param position     the position of the object.
-   * @param velocity     the velocity of the object.
-   * @param acceleration the acceleration of the object.
-   * @param referenceId  the entity id that represents the tank.
+   * The entity id that represents the turret.
    */
-  public TankObject(Pos position, Vec velocity, Vec acceleration, UUID referenceId) {
-    super(position, velocity, acceleration, 1D, 1D);
-    this.refId = referenceId;
-  }
+  private UUID turretRefId;
 
   /**
    * The constructor for the physics object.
@@ -36,11 +32,14 @@ public class TankObject extends GravitationallyAffectedPhysicsObject {
    * @param velocity     the velocity of the object.
    * @param acceleration the acceleration of the object.
    * @param objectId     the object's id.
-   * @param referenceId  the entity id that represents the tank.
+   * @param tankRefId    the entity id that represents the tank.
+   * @param turretRefId  the entity id that represents the turret.
    */
-  public TankObject(Pos position, Vec velocity, Vec acceleration, UUID objectId, UUID referenceId) {
+  public TankObject(Pos position, Vec velocity, Vec acceleration, UUID objectId, UUID tankRefId,
+                    UUID turretRefId) {
     super(position, velocity, acceleration, 1D, 0.5D, objectId);
-    this.refId = referenceId;
+    this.tankRefId = tankRefId;
+    this.turretRefId = turretRefId;
   }
 
   /**
@@ -48,17 +47,35 @@ public class TankObject extends GravitationallyAffectedPhysicsObject {
    *
    * @return the reference id that represents the tank.
    */
-  public UUID previousRefId() {
-    return refId;
+  public UUID tankRefId() {
+    return tankRefId;
   }
 
   /**
    * Sets the entity id that represents the tank.
    *
-   * @param previousRefId the entity id that represents the tank.
+   * @param refId the entity id that represents the tank.
    */
-  public void refId(UUID previousRefId) {
-    this.refId = previousRefId;
+  public void tankRefId(UUID refId) {
+    this.tankRefId = refId;
+  }
+
+  /**
+   * Gets the reference id that represents the turret.
+   *
+   * @return the reference id that represents the turret.
+   */
+  public UUID turretRefId() {
+    return turretRefId;
+  }
+
+  /**
+   * Sets the entity id that represents the turret.
+   *
+   * @param refId the entity id that represents the turret.
+   */
+  public void turretRefId(UUID refId) {
+    this.turretRefId = refId;
   }
 
   @Override
@@ -73,30 +90,24 @@ public class TankObject extends GravitationallyAffectedPhysicsObject {
       return;
     }
 
-    // get the direction of the wall.
-    Pos direction = collidingObjects.stream().filter(object -> object instanceof GroundObject)
-        .map(object -> object.position().sub(this.position())).reduce(Pos::add)
-        .orElse(new Pos(0, 0, 0));
-
-    // get the position of the colliding object.
-    Pos collidingObjectPosition = collidingObjects.stream()
-        .filter(object -> object instanceof GroundObject).map(PhysicsObject::position)
-        .reduce(Pos::add).orElse(new Pos(0, 0, 0));
-
-    // if the tank is colliding left/right, call jump.
-    if (direction.x() > 1.3 || direction.x() < -1.3) {
-      this.jumpUp();
-    }
-
-
-    // if the wall is below, then apply a force to the tank to push it away from the wall.
-    if (direction.y() < 0) {
-      this.velocity(new Vec(this.velocity().x(), 0, this.velocity().z()));
+    // if one of the colliding objects is below the tank, cancel the y movement.
+    if (collidingObjects.stream().anyMatch(object -> object.position().y() < this.position().y())) {
+      this.velocity(this.velocity().withY(0D));
 
       // if there is lateral movement, then apply friction to the tank.
       if (this.velocity().x() != 0) {
-        this.velocity(new Vec(this.velocity().x() * 0.3, this.velocity().y(), this.velocity().z()));
+        this.velocity(new Vec(this.velocity().x() * 0.6, this.velocity().y(), this.velocity().z()));
       }
+    }
+
+    // if one of the colliding objects is near the left or right of the tank, cancel the x movement.
+    // also make sure it's near the same y level as the tank so that it doesn't cancel movement when
+    // the tank is on the ground.
+    if (collidingObjects.stream().anyMatch(
+        object -> Math.abs(object.position().x() - this.position().x()) <= 0.5 &&
+            Math.abs(object.position().y() - this.position().y()) <= 0.5)) {
+      this.velocity(new Vec(0D, this.velocity().y(), this.velocity().z()));
+      jumpUp();
     }
   }
 
@@ -105,6 +116,6 @@ public class TankObject extends GravitationallyAffectedPhysicsObject {
    */
   private void jumpUp() {
 //    this.velocity(this.velocity().add(new Vec(0, 2, 0)));
-    this.position(this.position().add(new Pos(0, 2, 0)));
+    this.position(this.position().add(new Pos(0, 1, 0)));
   }
 }

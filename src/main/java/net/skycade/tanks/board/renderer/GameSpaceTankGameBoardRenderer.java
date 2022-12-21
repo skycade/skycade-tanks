@@ -4,7 +4,11 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
+import net.minestom.server.entity.LivingEntity;
+import net.minestom.server.entity.metadata.other.ArmorStandMeta;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.item.ItemStack;
+import net.minestom.server.item.Material;
 import net.skycade.tanks.board.TankGameBoard;
 import net.skycade.tanks.physics.PhysicsObject;
 import net.skycade.tanks.physics.ground.GroundObject;
@@ -54,24 +58,24 @@ public class GameSpaceTankGameBoardRenderer {
         int yCoord = board.bottomLeft().blockY() + y;
         gameSpace.setBlock(xCoord, yCoord, board.bottomLeft().blockZ(), Block.SAND);
         // add the ground physics object to the board
-        board.addPhysicsObject(
-            new GroundObject(new Pos(xCoord + 0.5, yCoord - 0.5, board.bottomLeft().blockZ() + 0.5)));
+        board.addPhysicsObject(new GroundObject(
+            new Pos(xCoord + 0.5, yCoord + 0.5, board.bottomLeft().blockZ() + 0.5)));
       }
     }
 
     // spawn the tanks
     Pos tank1Spawn =
-        new Pos(board.bottomLeft().blockX() + 3, board.bottomLeft().blockY() + heights[2] + 3,
+        new Pos(board.bottomLeft().blockX() + 3, board.bottomLeft().blockY() + heights[2] + 2,
             board.bottomLeft().blockZ() + 0.5);
     Pos tank2Spawn = new Pos(board.topRight().blockX() - 3,
-        board.bottomLeft().blockY() + heights[heights.length - 4] + 3,
+        board.bottomLeft().blockY() + heights[heights.length - 4] + 2,
         board.bottomLeft().blockZ() + 0.5);
 
     // add the tanks to the board
     board.addPhysicsObject(
-        new TankObject(tank1Spawn, Vec.ZERO, Vec.ZERO, board.player1TankObjectId(), null));
-//    board.addPhysicsObject(
-//        new TankObject(tank2Spawn, Vec.ZERO, Vec.ZERO, board.player2TankObjectId(), null));
+        new TankObject(tank1Spawn, Vec.ZERO, Vec.ZERO, board.player1TankObjectId(), null, null));
+    board.addPhysicsObject(
+        new TankObject(tank2Spawn, Vec.ZERO, Vec.ZERO, board.player2TankObjectId(), null, null));
   }
 
   /**
@@ -103,29 +107,47 @@ public class GameSpaceTankGameBoardRenderer {
         .filter(physicsObject -> physicsObject instanceof TankObject)
         .map(physicsObject -> (TankObject) physicsObject).toList()) {
 
-      Entity entity =
-          gameSpace.getEntities().stream().filter(e -> e.getUuid() == tankObject.previousRefId())
+      Entity tankEntity =
+          gameSpace.getEntities().stream().filter(e -> e.getUuid() == tankObject.tankRefId())
               .findFirst().orElse(null);
 
       // if the entity doesn't exist, create it
-      if (entity == null) {
+      if (tankEntity == null) {
         Entity tank = new Entity(EntityType.FURNACE_MINECART);
         tank.setNoGravity(true);
         tank.setInstance(gameSpace, tankObject.position());
         // update the reference id
-        tankObject.refId(tank.getUuid());
+        tankObject.tankRefId(tank.getUuid());
+        continue;
+      }
+      // if the entity does exist, update its position
+      tankEntity.refreshPosition(tankObject.position().sub(0, 0.5, 0));
+
+      Entity turretEntity =
+          gameSpace.getEntities().stream().filter(e -> e.getUuid() == tankObject.turretRefId())
+              .findFirst().orElse(null);
+
+      // if the turret entity doesn't exist, create it
+      if (turretEntity == null) {
+        // add a cannon to the tank
+        LivingEntity turret = new LivingEntity(EntityType.ARMOR_STAND);
+        turret.setItemInMainHand(ItemStack.of(Material.STICK));
+        turret.setInvisible(true);
+        turret.setNoGravity(true);
+        ArmorStandMeta turretEntityMeta = (ArmorStandMeta) turret.getEntityMeta();
+        turretEntityMeta.setHasArms(true);
+        turret.setInstance(gameSpace, tankObject.position()
+            .add(tankObject.objectId() == board.player1TankObjectId() ? 0.3 : -0.3, -0.7, -0.5)
+            .withYaw(tankObject.objectId() == board.player1TankObjectId() ? -90 : 90));
+        // update the reference id
+        tankObject.turretRefId(turret.getUuid());
         continue;
       }
 
-      // if the entity does exist, update its position
-      entity.teleport(tankObject.position());
-//      // add a cannon to the tank
-//      LivingEntity cannon2 = new LivingEntity(EntityType.ARMOR_STAND);
-//      cannon2.setItemInMainHand(ItemStack.of(Material.STICK));
-//      cannon2.setInvisible(true);
-//      ArmorStandMeta cannon2Meta = (ArmorStandMeta) cannon2.getEntityMeta();
-//      cannon2Meta.setHasArms(true);
-//      cannon2.setInstance(gameSpace, tank2Spawn.add(0, 1, 0.5).withYaw(90));
+      // if the turret entity does exist, update its position
+      turretEntity.refreshPosition(tankObject.position()
+          .add(tankObject.objectId() == board.player1TankObjectId() ? 0.3 : -0.3, -0.7, -0.5)
+          .withYaw(tankObject.objectId() == board.player1TankObjectId() ? -90 : 90));
     }
   }
 }
