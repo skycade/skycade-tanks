@@ -115,13 +115,14 @@ public class GameSpaceTankGameBoardRenderer {
       if (tankEntity == null) {
         Entity tank = new Entity(EntityType.FURNACE_MINECART);
         tank.setNoGravity(true);
+
         tank.setInstance(gameSpace, tankObject.position());
         // update the reference id
         tankObject.tankRefId(tank.getUuid());
         continue;
       }
       // if the entity does exist, update its position
-      tankEntity.refreshPosition(tankObject.position().sub(0, 0.5, 0));
+      tankEntity.teleport(tankObject.position().sub(0, 0.3, 0));
 
       Entity turretEntity =
           gameSpace.getEntities().stream().filter(e -> e.getUuid() == tankObject.turretRefId())
@@ -131,23 +132,45 @@ public class GameSpaceTankGameBoardRenderer {
       if (turretEntity == null) {
         // add a cannon to the tank
         LivingEntity turret = new LivingEntity(EntityType.ARMOR_STAND);
-        turret.setItemInMainHand(ItemStack.of(Material.STICK));
-        turret.setInvisible(true);
+        turret.setHelmet(ItemStack.of(Material.STICK));
+//        turret.setInvisible(true);
         turret.setNoGravity(true);
-        ArmorStandMeta turretEntityMeta = (ArmorStandMeta) turret.getEntityMeta();
-        turretEntityMeta.setHasArms(true);
-        turret.setInstance(gameSpace, tankObject.position()
-            .add(tankObject.objectId() == board.player1TankObjectId() ? 0.3 : -0.3, -0.7, -0.5)
-            .withYaw(tankObject.objectId() == board.player1TankObjectId() ? -90 : 90));
+
+        turret.setInstance(gameSpace, determineTurretPosition(tankObject));
         // update the reference id
         tankObject.turretRefId(turret.getUuid());
         continue;
       }
 
+      // set the turret's angle
+      ArmorStandMeta turretEntityMeta = (ArmorStandMeta) turretEntity.getEntityMeta();
+      turretEntityMeta.setHeadRotation(
+          isPlayer1Tank(tankObject) ? board.player1TankTurretAngle() :
+              board.player2TankTurretAngle());
+
       // if the turret entity does exist, update its position
-      turretEntity.refreshPosition(tankObject.position()
-          .add(tankObject.objectId() == board.player1TankObjectId() ? 0.3 : -0.3, -0.7, -0.5)
-          .withYaw(tankObject.objectId() == board.player1TankObjectId() ? -90 : 90));
+      turretEntity.teleport(determineTurretPosition(tankObject));
     }
+  }
+
+  /**
+   * Determines the turret position in relation to the tank.
+   *
+   * @param tankObject the tank object.
+   * @return the turret position.
+   */
+  private Pos determineTurretPosition(TankObject tankObject) {
+    return tankObject.position().add(isPlayer1Tank(tankObject) ? 0.3 : -0.3, -1.5, 0)
+        .withYaw(isPlayer1Tank(tankObject) ? 0 : 180);
+  }
+
+  /**
+   * If the tank belongs to player 1.
+   *
+   * @param tankObject the tank object.
+   * @return if the tank belongs to player 1.
+   */
+  private boolean isPlayer1Tank(TankObject tankObject) {
+    return tankObject.objectId() == board.player1TankObjectId();
   }
 }

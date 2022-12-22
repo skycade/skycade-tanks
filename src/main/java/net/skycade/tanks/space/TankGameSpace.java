@@ -6,7 +6,6 @@ import java.util.UUID;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.InstanceTickEvent;
@@ -20,6 +19,8 @@ import net.skycade.serverruntime.api.space.GameSpace;
 import net.skycade.serverruntime.space.dimension.FullbrightDimension;
 import net.skycade.tanks.board.TankGameBoard;
 import net.skycade.tanks.board.renderer.GameSpaceTankGameBoardRenderer;
+import net.skycade.tanks.calculator.PlayerMovementDirection;
+import net.skycade.tanks.calculator.PlayerMovementDirectionCalculator;
 
 /**
  * This game space is used for the tank game.
@@ -71,26 +72,29 @@ public class TankGameSpace extends GameSpace {
     eventNode().addListener(PlayerMoveEvent.class, event -> {
       Pos oldPosition = event.getPlayer().getPosition();
       Pos newPosition = event.getNewPosition();
+      Pos diff = newPosition.sub(oldPosition);
+
+      PlayerMovementDirection direction =
+          PlayerMovementDirectionCalculator.calculate(oldPosition, newPosition);
 
       // if the player moved in the x, z, or y direction, update the physics
-      if (oldPosition.blockX() != newPosition.blockX() ||
-          oldPosition.blockZ() != newPosition.blockZ() ||
-          oldPosition.blockY() != newPosition.blockY()) {
+      if (diff.x() != 0 || diff.z() != 0 || diff.y() != 0) {
         event.setCancelled(true);
       }
 
-      // if the player moved in the x direction
-      if (oldPosition.x() != newPosition.x()) {
-        Vec velocity = board.player1Tank().velocity();
-
-        // if the player moved to the right
-        if (oldPosition.x() < newPosition.x()) {
-          // move the tank to the right
-          board.player1Tank().velocity(new Vec(0.4, velocity.y(), velocity.z()));
-        } else {
-          // move the tank to the left
-          board.player1Tank().velocity(new Vec(-0.4, velocity.y(), velocity.z()));
-        }
+      // if the player moved forward
+      if (direction == PlayerMovementDirection.FORWARD) {
+        // rotate the turret on the positive unit circle
+        board.player1TankTurretAngle(board.player1TankTurretAngle().add(0, 0, 4));
+      } else if (direction == PlayerMovementDirection.BACKWARD) {
+        // rotate the turret on the negative unit circle
+        board.player1TankTurretAngle(board.player1TankTurretAngle().add(0, 0, -4));
+      } else if (direction == PlayerMovementDirection.LEFT) {
+        // push the tank left
+        board.player1Tank().velocity(board.player1Tank().velocity().add(-0.2, 0, 0));
+      } else if (direction == PlayerMovementDirection.RIGHT) {
+        // push the tank right
+        board.player1Tank().velocity(board.player1Tank().velocity().add(0.2, 0, 0));
       }
 
       // if the player moved in the y direction
