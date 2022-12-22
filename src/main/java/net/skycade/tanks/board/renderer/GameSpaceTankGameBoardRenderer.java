@@ -4,12 +4,12 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
-import net.minestom.server.entity.LivingEntity;
-import net.minestom.server.entity.metadata.other.ArmorStandMeta;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.item.ItemStack;
-import net.minestom.server.item.Material;
+import net.minestom.server.network.packet.server.play.ParticlePacket;
+import net.minestom.server.particle.Particle;
+import net.minestom.server.particle.ParticleCreator;
 import net.skycade.tanks.board.TankGameBoard;
+import net.skycade.tanks.physics.PhysicsConstants;
 import net.skycade.tanks.physics.PhysicsObject;
 import net.skycade.tanks.physics.ground.GroundObject;
 import net.skycade.tanks.physics.tank.TankObject;
@@ -31,6 +31,7 @@ public class GameSpaceTankGameBoardRenderer {
   /**
    * The time at which the last render was performed.
    */
+  @SuppressWarnings("FieldCanBeLocal")
   private long lastRender;
 
   /**
@@ -73,9 +74,9 @@ public class GameSpaceTankGameBoardRenderer {
 
     // add the tanks to the board
     board.addPhysicsObject(
-        new TankObject(tank1Spawn, Vec.ZERO, Vec.ZERO, board.player1TankObjectId(), null, null));
+        new TankObject(tank1Spawn, Vec.ZERO, Vec.ZERO, board.player1TankState().objectId(), null));
     board.addPhysicsObject(
-        new TankObject(tank2Spawn, Vec.ZERO, Vec.ZERO, board.player2TankObjectId(), null, null));
+        new TankObject(tank2Spawn, Vec.ZERO, Vec.ZERO, board.player2TankState().objectId(), null));
   }
 
   /**
@@ -124,53 +125,38 @@ public class GameSpaceTankGameBoardRenderer {
       // if the entity does exist, update its position
       tankEntity.teleport(tankObject.position().sub(0, 0.3, 0));
 
-      Entity turretEntity =
-          gameSpace.getEntities().stream().filter(e -> e.getUuid() == tankObject.turretRefId())
-              .findFirst().orElse(null);
+      double angleOfTurret = board.tankStateOfTank(tankObject).turretVector().z();
 
-      // if the turret entity doesn't exist, create it
-      if (turretEntity == null) {
-        // add a cannon to the tank
-        LivingEntity turret = new LivingEntity(EntityType.ARMOR_STAND);
-        turret.setHelmet(ItemStack.of(Material.STICK));
-//        turret.setInvisible(true);
-        turret.setNoGravity(true);
+      // render the turret using particles
+      // being 1.5 blocks long, it will be composed of 30 particles
+      for (int i = 0; i < 30; i++) {
+        double x = Math.cos(angleOfTurret) * (i / 30.0) * 1.5 + tankObject.position().x();
+        double y = Math.sin(angleOfTurret) * (i / 30.0) * 1.5 + tankObject.position().y();
 
-        turret.setInstance(gameSpace, determineTurretPosition(tankObject));
-        // update the reference id
-        tankObject.turretRefId(turret.getUuid());
-        continue;
+        ParticlePacket particlePacket =
+            ParticleCreator.createParticlePacket(Particle.DRIPPING_LAVA, x, y,
+                tankObject.position().z(), 0f, 0f, 0f, 1);
+        gameSpace.sendGroupedPacket(particlePacket);
       }
 
-      // set the turret's angle
-      ArmorStandMeta turretEntityMeta = (ArmorStandMeta) turretEntity.getEntityMeta();
-      turretEntityMeta.setHeadRotation(
-          isPlayer1Tank(tankObject) ? board.player1TankTurretAngle() :
-              board.player2TankTurretAngle());
+      // render a thick parabola for the trajectory using 50 particles
+      // using the angle of the turret above
+      // ... shooting on the x axis, so only the x & y are affected
+      double v0 = 1.5;
+      double particleSpacing = 0.5;
 
-      // if the turret entity does exist, update its position
-      turretEntity.teleport(determineTurretPosition(tankObject));
+      for (int i = 0; i < 50; i++) {
+        double t = i * particleSpacing;
+        double x = v0 * Math.cos(angleOfTurret) * t + tankObject.position().x();
+        double y = v0 * Math.sin(angleOfTurret) * t - 0.5 * PhysicsConstants.GRAVITY * t * t +
+            tankObject.position().y();
+
+
+        ParticlePacket particlePacket =
+            ParticleCreator.createParticlePacket(Particle.DRIPPING_WATER, x, y,
+                tankObject.position().z(), 0f, 0f, 0f, 1);
+        gameSpace.sendGroupedPacket(particlePacket);
+      }
     }
-  }
-
-  /**
-   * Determines the turret position in relation to the tank.
-   *
-   * @param tankObject the tank object.
-   * @return the turret position.
-   */
-  private Pos determineTurretPosition(TankObject tankObject) {
-    return tankObject.position().add(isPlayer1Tank(tankObject) ? 0.3 : -0.3, -1.5, 0)
-        .withYaw(isPlayer1Tank(tankObject) ? 0 : 180);
-  }
-
-  /**
-   * If the tank belongs to player 1.
-   *
-   * @param tankObject the tank object.
-   * @return if the tank belongs to player 1.
-   */
-  private boolean isPlayer1Tank(TankObject tankObject) {
-    return tankObject.objectId() == board.player1TankObjectId();
   }
 }

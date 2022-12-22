@@ -46,7 +46,7 @@ public abstract class GravitationallyAffectedPhysicsObject extends PhysicsObject
   @Override
   public void update(TankGameBoard board) {
     // Apply gravity.
-    this.velocity(this.velocity().add(0, -0.1, 0));
+    this.velocity(this.velocity().add(0, -1 * PhysicsConstants.GRAVITY, 0));
     this.applyForces(board);
   }
 

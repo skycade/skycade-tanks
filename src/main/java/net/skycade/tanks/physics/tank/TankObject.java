@@ -2,12 +2,8 @@ package net.skycade.tanks.physics.tank;
 
 import java.util.List;
 import java.util.UUID;
-import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
-import net.minestom.server.network.packet.server.play.ParticlePacket;
-import net.minestom.server.particle.Particle;
-import net.minestom.server.particle.ParticleCreator;
 import net.skycade.tanks.board.TankGameBoard;
 import net.skycade.tanks.physics.GravitationallyAffectedPhysicsObject;
 import net.skycade.tanks.physics.PhysicsObject;
@@ -21,11 +17,6 @@ public class TankObject extends GravitationallyAffectedPhysicsObject {
   private UUID tankRefId;
 
   /**
-   * The entity id that represents the turret.
-   */
-  private UUID turretRefId;
-
-  /**
    * The constructor for the physics object.
    *
    * @param position     the position of the object.
@@ -33,13 +24,10 @@ public class TankObject extends GravitationallyAffectedPhysicsObject {
    * @param acceleration the acceleration of the object.
    * @param objectId     the object's id.
    * @param tankRefId    the entity id that represents the tank.
-   * @param turretRefId  the entity id that represents the turret.
    */
-  public TankObject(Pos position, Vec velocity, Vec acceleration, UUID objectId, UUID tankRefId,
-                    UUID turretRefId) {
+  public TankObject(Pos position, Vec velocity, Vec acceleration, UUID objectId, UUID tankRefId) {
     super(position, velocity, acceleration, 1D, 0.5D, objectId);
     this.tankRefId = tankRefId;
-    this.turretRefId = turretRefId;
   }
 
   /**
@@ -58,24 +46,6 @@ public class TankObject extends GravitationallyAffectedPhysicsObject {
    */
   public void tankRefId(UUID refId) {
     this.tankRefId = refId;
-  }
-
-  /**
-   * Gets the reference id that represents the turret.
-   *
-   * @return the reference id that represents the turret.
-   */
-  public UUID turretRefId() {
-    return turretRefId;
-  }
-
-  /**
-   * Sets the entity id that represents the turret.
-   *
-   * @param refId the entity id that represents the turret.
-   */
-  public void turretRefId(UUID refId) {
-    this.turretRefId = refId;
   }
 
   @Override

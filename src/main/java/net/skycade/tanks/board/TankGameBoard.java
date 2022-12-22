@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
 import net.skycade.tanks.physics.PhysicsObject;
 import net.skycade.tanks.physics.tank.TankObject;
 
@@ -27,40 +26,54 @@ public class TankGameBoard {
   private final List<PhysicsObject> physicsObjects;
 
   /**
-   * Player 1's tank.
+   * Player 1's tank state.
    */
-  private final UUID player1TankObjectId;
+  private final TankState player1TankState;
 
   /**
-   * Player 2's tank.
+   * Player 2's tank state.
    */
-  private final UUID player2TankObjectId;
+  private final TankState player2TankState;
 
   /**
-   * The turret angle of player 1's tank.
+   * Player 1's uuid.
    */
-  private Vec player1TankTurretAngle;
+  private final UUID player1Uuid;
 
   /**
-   * The turret angle of player 2's tank.
+   * Player 2's uuid.
    */
-  private Vec player2TankTurretAngle;
+  private final UUID player2Uuid;
+
+  /**
+   * The current turn.
+   */
+  private BoardTurn currentTurn;
+
+  /**
+   * Tank turn tracker.
+   */
+  private TankTurnTracker turnTracker;
 
   /**
    * Creates a new tank game board.
    *
-   * @param bottomLeft the bottom left corner of the board.
-   * @param topRight   the top right corner of the board.
+   * @param bottomLeft  the bottom left corner of the board.
+   * @param topRight    the top right corner of the board.
+   * @param player1Uuid player 1's UUID.
+   * @param player2Uuid player 2's UUID.
    */
-  public TankGameBoard(Pos bottomLeft, Pos topRight) {
+  public TankGameBoard(Pos bottomLeft, Pos topRight, UUID player1Uuid, UUID player2Uuid) {
     this.bottomLeft = bottomLeft;
     this.topRight = topRight;
-    this.player1TankObjectId = UUID.randomUUID();
-    this.player2TankObjectId = UUID.randomUUID();
-    this.player1TankTurretAngle = new Vec(0, 0, 0);
-    this.player2TankTurretAngle = new Vec(0, 0, 0);
-
+    this.player1Uuid = player1Uuid;
+    this.player2Uuid = player2Uuid;
+    this.player1TankState = new TankState();
+    this.player2TankState = new TankState();
     this.physicsObjects = new ArrayList<>();
+    this.currentTurn = BoardTurn.PLAYER_1;
+    this.turnTracker = new TankTurnTracker();
+
   }
 
   /**
@@ -107,8 +120,8 @@ public class TankGameBoard {
   public TankObject player1Tank() {
     return physicsObjects.stream().filter(physicsObject -> physicsObject instanceof TankObject)
         .map(physicsObject -> (TankObject) physicsObject)
-        .filter(physicsObject -> physicsObject.objectId().equals(player1TankObjectId)).findFirst()
-        .orElse(null);
+        .filter(physicsObject -> physicsObject.objectId().equals(player1TankState.objectId()))
+        .findFirst().orElse(null);
   }
 
   /**
@@ -116,29 +129,29 @@ public class TankGameBoard {
    *
    * @return the player 2 tank.
    */
-  public PhysicsObject player2Tank() {
+  public TankObject player2Tank() {
     return physicsObjects.stream().filter(physicsObject -> physicsObject instanceof TankObject)
         .map(physicsObject -> (TankObject) physicsObject)
-        .filter(physicsObject -> physicsObject.objectId().equals(player2TankObjectId)).findFirst()
-        .orElse(null);
+        .filter(physicsObject -> physicsObject.objectId().equals(player2TankState.objectId()))
+        .findFirst().orElse(null);
   }
 
   /**
-   * Gets the player 1 tank object id.
+   * Gets the player 1 tank state.
    *
-   * @return the player 1 tank object id.
+   * @return the player 1 tank state.
    */
-  public UUID player1TankObjectId() {
-    return player1TankObjectId;
+  public TankState player1TankState() {
+    return player1TankState;
   }
 
   /**
-   * Gets the player 2 tank object id.
+   * Gets the player 2 tank state.
    *
-   * @return the player 2 tank object id.
+   * @return the player 2 tank state.
    */
-  public UUID player2TankObjectId() {
-    return player2TankObjectId;
+  public TankState player2TankState() {
+    return player2TankState;
   }
 
   /**
@@ -153,47 +166,85 @@ public class TankGameBoard {
   }
 
   /**
-   * Gets the player 1 tank turret angle.
+   * Gets the current turn.
    *
-   * @return the player 1 tank turret angle.
+   * @return the current turn.
    */
-  public Vec player1TankTurretAngle() {
-    return player1TankTurretAngle;
+  public BoardTurn currentTurn() {
+    return currentTurn;
   }
 
   /**
-   * Gets the player 2 tank turret angle.
+   * Sets the current turn.
    *
-   * @return the player 2 tank turret angle.
+   * @param currentTurn the current turn.
    */
-  public Vec player2TankTurretAngle() {
-    return player2TankTurretAngle;
+  public void setCurrentTurn(BoardTurn currentTurn) {
+    this.currentTurn = currentTurn;
   }
 
   /**
-   * Sets the player 1 tank turret angle.
+   * Gets the turn tracker.
    *
-   * @param player1TankTurretAngle the player 1 tank turret angle.
+   * @return the turn tracker.
    */
-  public void player1TankTurretAngle(Vec player1TankTurretAngle) {
-    this.player1TankTurretAngle = player1TankTurretAngle;
+  public TankTurnTracker turnTracker() {
+    return turnTracker;
   }
 
   /**
-   * Sets the player 2 tank turret angle.
+   * Gets the player 1 uuid.
    *
-   * @param player2TankTurretAngle the player 2 tank turret angle.
+   * @return the player 1 uuid.
    */
-  public void player2TankTurretAngle(Vec player2TankTurretAngle) {
-    this.player2TankTurretAngle = player2TankTurretAngle;
+  public UUID player1Uuid() {
+    return player1Uuid;
   }
 
   /**
-   * Gets the player 1 tank turret position.
+   * Gets the player 2 uuid.
    *
-   * @return the player 1 tank turret position.
+   * @return the player 2 uuid.
    */
-  public Pos player1TankTurretPosition() {
-    return player1Tank().position().add(player1TankTurretAngle);
+  public UUID player2Uuid() {
+    return player2Uuid;
+  }
+
+  /**
+   * Gets the uuid of the player whose turn it is.
+   *
+   * @return the uuid of the player whose turn it is.
+   */
+  public UUID uuidOfCurrentTurn() {
+    return currentTurn == BoardTurn.PLAYER_1 ? player1Uuid : player2Uuid;
+  }
+
+  /**
+   * Gets the tank of the player whose turn it is.
+   *
+   * @return the tank of the player whose turn it is.
+   */
+  public TankObject tankOfCurrentTurn() {
+    return currentTurn == BoardTurn.PLAYER_1 ? player1Tank() : player2Tank();
+  }
+
+  /**
+   * Gets the tank state of the player whose turn it is.
+   *
+   * @return the tank state of the player whose turn it is.
+   */
+  public TankState tankStateOfCurrentTurn() {
+    return currentTurn == BoardTurn.PLAYER_1 ? player1TankState : player2TankState;
+  }
+
+  /**
+   * Gets the tank state of a tank object.
+   *
+   * @param tank the tank object.
+   * @return the tank state of a tank object.
+   */
+  public TankState tankStateOfTank(TankObject tank) {
+    return tank.objectId().equals(player1TankState.objectId()) ? player1TankState :
+        player2TankState;
   }
 }
