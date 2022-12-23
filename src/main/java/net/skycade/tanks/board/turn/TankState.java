@@ -1,4 +1,4 @@
-package net.skycade.tanks.board;
+package net.skycade.tanks.board.turn;
 
 import java.util.UUID;
 import net.minestom.server.coordinate.Vec;

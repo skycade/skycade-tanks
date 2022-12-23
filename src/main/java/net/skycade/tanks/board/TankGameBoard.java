@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.UUID;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
+import net.skycade.tanks.board.turn.BoardTurn;
+import net.skycade.tanks.board.turn.TankState;
+import net.skycade.tanks.board.turn.TankTurnTracker;
 import net.skycade.tanks.physics.PhysicsObject;
 import net.skycade.tanks.physics.tank.TankObject;
 
@@ -73,7 +76,6 @@ public class TankGameBoard {
     this.physicsObjects = new ArrayList<>();
     this.currentTurn = BoardTurn.PLAYER_1;
     this.turnTracker = new TankTurnTracker();
-
   }
 
   /**
@@ -220,6 +222,16 @@ public class TankGameBoard {
   }
 
   /**
+   * If it's a player's turn.
+   *
+   * @param uuid the uuid of the player.
+   * @return if it's a player's turn.
+   */
+  public boolean isTurn(UUID uuid) {
+    return uuidOfCurrentTurn().equals(uuid);
+  }
+
+  /**
    * Gets the tank of the player whose turn it is.
    *
    * @return the tank of the player whose turn it is.
@@ -246,5 +258,16 @@ public class TankGameBoard {
   public TankState tankStateOfTank(TankObject tank) {
     return tank.objectId().equals(player1TankState.objectId()) ? player1TankState :
         player2TankState;
+  }
+
+  /**
+   * Gets the spawn point of a player.
+   *
+   * @param playerUuid the player uuid.
+   * @return the spawn point of a player.
+   */
+  public Pos getPlayerSpawn(UUID playerUuid) {
+    return playerUuid.equals(player1Uuid) ? BoardAndSpaceConstants.PLAYER_1_SPAWN_POSITION :
+        BoardAndSpaceConstants.PLAYER_2_SPAWN_POSITION;
   }
 }

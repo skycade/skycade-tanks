@@ -7,6 +7,7 @@ import net.minestom.server.coordinate.Vec;
 import net.skycade.tanks.board.TankGameBoard;
 import net.skycade.tanks.physics.GravitationallyAffectedPhysicsObject;
 import net.skycade.tanks.physics.PhysicsObject;
+import net.skycade.tanks.physics.edge.BoardEdgeObject;
 import net.skycade.tanks.physics.ground.GroundObject;
 
 public class TankObject extends GravitationallyAffectedPhysicsObject {
@@ -56,7 +57,8 @@ public class TankObject extends GravitationallyAffectedPhysicsObject {
     // cancel any z movement
     this.velocity(this.velocity().withZ(0D));
 
-    if (collidingObjects.stream().noneMatch(object -> object instanceof GroundObject)) {
+    if (collidingObjects.stream()
+        .noneMatch(object -> object instanceof GroundObject || object instanceof BoardEdgeObject)) {
       return;
     }
 
@@ -77,7 +79,10 @@ public class TankObject extends GravitationallyAffectedPhysicsObject {
         object -> Math.abs(object.position().x() - this.position().x()) <= 0.5 &&
             Math.abs(object.position().y() - this.position().y()) <= 0.5)) {
       this.velocity(new Vec(0D, this.velocity().y(), this.velocity().z()));
-      jumpUp();
+      // if none of the objects is a board edge, then jump.
+      if (collidingObjects.stream().noneMatch(object -> object instanceof BoardEdgeObject)) {
+        jumpUp();
+      }
     }
   }
 

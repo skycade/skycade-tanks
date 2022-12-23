@@ -1,4 +1,6 @@
-package net.skycade.tanks.board;
+package net.skycade.tanks.board.turn;
+
+import net.skycade.tanks.board.BoardAndSpaceConstants;
 
 public class TankTurnTracker {
 
@@ -23,11 +25,17 @@ public class TankTurnTracker {
   private int turretRotationMovesDone;
 
   /**
+   * The firing power of the tank.
+   */
+  private double firingPower;
+
+  /**
    * Creates a new turn tracker.
    */
   public TankTurnTracker() {
     this.positionMovesDone = 0;
     this.turretRotationMovesDone = 0;
+    this.firingPower = BoardAndSpaceConstants.MIN_FIRING_POWER;
   }
 
   /**
@@ -77,10 +85,25 @@ public class TankTurnTracker {
   }
 
   /**
+   * Gets the firing power of the tank.
+   */
+  public double firingPower() {
+    return firingPower;
+  }
+
+  /**
+   * Sets the firing power of the tank.
+   */
+  public void setFiringPower(double firingPower) {
+    this.firingPower = firingPower;
+  }
+
+  /**
    * Resets the turn tracker.
    */
   public void reset() {
     this.positionMovesDone = 0;
     this.turretRotationMovesDone = 0;
+    this.firingPower = 0;
   }
 }

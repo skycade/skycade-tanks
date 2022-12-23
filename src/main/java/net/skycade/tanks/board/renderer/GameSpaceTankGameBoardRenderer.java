@@ -1,22 +1,21 @@
 package net.skycade.tanks.board.renderer;
 
+import java.util.List;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
-import net.minestom.server.entity.Entity;
-import net.minestom.server.entity.EntityType;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.network.packet.server.play.ParticlePacket;
-import net.minestom.server.particle.Particle;
-import net.minestom.server.particle.ParticleCreator;
 import net.skycade.tanks.board.TankGameBoard;
-import net.skycade.tanks.physics.PhysicsConstants;
+import net.skycade.tanks.board.renderer.guide.ParabolicGuideRenderer;
+import net.skycade.tanks.board.renderer.power.FiringPowerBarRenderer;
+import net.skycade.tanks.board.renderer.tank.TankRenderer;
 import net.skycade.tanks.physics.PhysicsObject;
+import net.skycade.tanks.physics.edge.BoardEdgeObject;
 import net.skycade.tanks.physics.ground.GroundObject;
 import net.skycade.tanks.physics.tank.TankObject;
 import net.skycade.tanks.space.TankGameSpace;
 import net.skycade.tanks.terrain.BoardTerrainGenerator;
 
-public class GameSpaceTankGameBoardRenderer {
+public class GameSpaceTankGameBoardRenderer extends TankGameRenderer<List<PhysicsObject>> {
 
   /**
    * The game space to render the board to.
@@ -27,6 +26,21 @@ public class GameSpaceTankGameBoardRenderer {
    * The board to render.
    */
   private final TankGameBoard board;
+
+  /**
+   * The tank renderer.
+   */
+  private final TankRenderer tankRenderer;
+
+  /**
+   * The guide renderer.
+   */
+  private final ParabolicGuideRenderer parabolicGuideRenderer;
+
+  /**
+   * The power bar renderer.
+   */
+  private final FiringPowerBarRenderer firingPowerBarRenderer;
 
   /**
    * The time at which the last render was performed.
@@ -41,8 +55,12 @@ public class GameSpaceTankGameBoardRenderer {
    * @param board     the board to render.
    */
   public GameSpaceTankGameBoardRenderer(TankGameSpace gameSpace, TankGameBoard board) {
+    super(gameSpace, board);
     this.gameSpace = gameSpace;
     this.board = board;
+    this.tankRenderer = new TankRenderer(gameSpace, board);
+    this.parabolicGuideRenderer = new ParabolicGuideRenderer(gameSpace, board);
+    this.firingPowerBarRenderer = new FiringPowerBarRenderer(gameSpace, board);
   }
 
   /**
@@ -64,7 +82,37 @@ public class GameSpaceTankGameBoardRenderer {
       }
     }
 
-    // spawn the tanks
+    // add the board edges
+    int xStart = board.bottomLeft().blockX();
+    int xEnd = board.topRight().blockX();
+    int yStart = board.bottomLeft().blockY();
+    int yEnd = board.topRight().blockY();
+
+    // add the left edge
+    for (int y = yStart; y <= yEnd; y++) {
+      board.addPhysicsObject(
+          new BoardEdgeObject(new Pos(xStart, y + 0.5, board.bottomLeft().blockZ() + 0.5)));
+    }
+
+    // add the right edge
+    for (int y = yStart; y <= yEnd; y++) {
+      board.addPhysicsObject(
+          new BoardEdgeObject(new Pos(xEnd + 1, y + 0.5, board.bottomLeft().blockZ() + 0.5)));
+    }
+
+    // add the bottom edge
+    for (int x = xStart; x <= xEnd; x++) {
+      board.addPhysicsObject(
+          new BoardEdgeObject(new Pos(x + 0.5, yStart, board.bottomLeft().blockZ() + 0.5)));
+    }
+
+    // add the top edge
+    for (int x = xStart; x <= xEnd; x++) {
+      board.addPhysicsObject(
+          new BoardEdgeObject(new Pos(x + 0.5, yEnd + 1, board.bottomLeft().blockZ() + 0.5)));
+    }
+
+    // add the tanks
     Pos tank1Spawn =
         new Pos(board.bottomLeft().blockX() + 3, board.bottomLeft().blockY() + heights[2] + 2,
             board.bottomLeft().blockZ() + 0.5);
@@ -84,7 +132,7 @@ public class GameSpaceTankGameBoardRenderer {
    */
   public void tick() {
     calculateNextPositions();
-    render();
+    render(board.physicsObjects());
     // update the last render time
     lastRender = System.currentTimeMillis();
   }
@@ -102,61 +150,16 @@ public class GameSpaceTankGameBoardRenderer {
   /**
    * Renders the board.
    */
-  private void render() {
+  @Override
+  public void render(List<PhysicsObject> context) {
     // render each physics object (tanks only at the moment)
-    for (TankObject tankObject : board.physicsObjects().stream()
+    for (TankObject tankObject : context.stream()
         .filter(physicsObject -> physicsObject instanceof TankObject)
         .map(physicsObject -> (TankObject) physicsObject).toList()) {
-
-      Entity tankEntity =
-          gameSpace.getEntities().stream().filter(e -> e.getUuid() == tankObject.tankRefId())
-              .findFirst().orElse(null);
-
-      // if the entity doesn't exist, create it
-      if (tankEntity == null) {
-        Entity tank = new Entity(EntityType.FURNACE_MINECART);
-        tank.setNoGravity(true);
-
-        tank.setInstance(gameSpace, tankObject.position());
-        // update the reference id
-        tankObject.tankRefId(tank.getUuid());
-        continue;
-      }
-      // if the entity does exist, update its position
-      tankEntity.teleport(tankObject.position().sub(0, 0.3, 0));
-
-      double angleOfTurret = board.tankStateOfTank(tankObject).turretVector().z();
-
-      // render the turret using particles
-      // being 1.5 blocks long, it will be composed of 30 particles
-      for (int i = 0; i < 30; i++) {
-        double x = Math.cos(angleOfTurret) * (i / 30.0) * 1.5 + tankObject.position().x();
-        double y = Math.sin(angleOfTurret) * (i / 30.0) * 1.5 + tankObject.position().y();
-
-        ParticlePacket particlePacket =
-            ParticleCreator.createParticlePacket(Particle.DRIPPING_LAVA, x, y,
-                tankObject.position().z(), 0f, 0f, 0f, 1);
-        gameSpace.sendGroupedPacket(particlePacket);
-      }
-
-      // render a thick parabola for the trajectory using 50 particles
-      // using the angle of the turret above
-      // ... shooting on the x axis, so only the x & y are affected
-      double v0 = 1.5;
-      double particleSpacing = 0.5;
-
-      for (int i = 0; i < 50; i++) {
-        double t = i * particleSpacing;
-        double x = v0 * Math.cos(angleOfTurret) * t + tankObject.position().x();
-        double y = v0 * Math.sin(angleOfTurret) * t - 0.5 * PhysicsConstants.GRAVITY * t * t +
-            tankObject.position().y();
-
-
-        ParticlePacket particlePacket =
-            ParticleCreator.createParticlePacket(Particle.DRIPPING_WATER, x, y,
-                tankObject.position().z(), 0f, 0f, 0f, 1);
-        gameSpace.sendGroupedPacket(particlePacket);
-      }
+      this.tankRenderer.render(tankObject);
+      this.parabolicGuideRenderer.render(tankObject);
     }
+
+    this.firingPowerBarRenderer.render(null);
   }
 }

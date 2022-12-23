@@ -1,7 +1,7 @@
 package net.skycade.tanks.session;
 
 import java.util.UUID;
-import net.skycade.tanks.board.BoardConstants;
+import net.skycade.tanks.board.BoardAndSpaceConstants;
 import net.skycade.tanks.board.TankGameBoard;
 
 /**
@@ -46,7 +46,7 @@ public class TankGameSession {
     this.sessionUniqueId = UUID.randomUUID();
     this.player1UniqueId = player1UniqueId;
     this.player2UniqueId = player2UniqueId;
-    this.gameBoard = new TankGameBoard(BoardConstants.BOTTOM_LEFT, BoardConstants.TOP_RIGHT, player1UniqueId, player2UniqueId);
+    this.gameBoard = new TankGameBoard(BoardAndSpaceConstants.BOARD_BOTTOM_LEFT, BoardAndSpaceConstants.BOARD_TOP_RIGHT, player1UniqueId, player2UniqueId);
   }
 
   /**

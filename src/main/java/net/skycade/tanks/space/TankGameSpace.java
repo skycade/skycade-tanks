@@ -5,29 +5,33 @@ import java.nio.file.Path;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.InstanceTickEvent;
+import net.minestom.server.event.player.PlayerHandAnimationEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.instance.AnvilLoader;
 import net.skycade.serverruntime.api.space.GameSpace;
 import net.skycade.serverruntime.space.dimension.FullbrightDimension;
-import net.skycade.tanks.board.BoardTurn;
+import net.skycade.tanks.board.BoardAndSpaceConstants;
 import net.skycade.tanks.board.TankGameBoard;
-import net.skycade.tanks.board.TankState;
-import net.skycade.tanks.board.TankTurnTracker;
 import net.skycade.tanks.board.renderer.GameSpaceTankGameBoardRenderer;
+import net.skycade.tanks.board.turn.BoardTurn;
+import net.skycade.tanks.board.turn.TankState;
+import net.skycade.tanks.board.turn.TankTurnTracker;
 import net.skycade.tanks.calculator.PlayerMovementDirection;
 import net.skycade.tanks.calculator.PlayerMovementDirectionCalculator;
 import net.skycade.tanks.physics.tank.TankObject;
+import net.skycade.tanks.space.utils.TankGameSpaceCalculationUtils;
 
 /**
  * This game space is used for the tank game.
  */
 public class TankGameSpace extends GameSpace {
-  public static final Pos SPAWN_POSITION = new Pos(0, 25, 23, -180, 0);
 
   /**
    * Creates a new tank game board renderer.
@@ -52,8 +56,8 @@ public class TankGameSpace extends GameSpace {
 
     instanceBoundPlayerEventNode().addListener(PlayerSpawnEvent.class, event -> {
       Player player = event.getPlayer();
-      player.teleport(SPAWN_POSITION);
-      player.setGameMode(GameMode.CREATIVE);
+      player.teleport(board.getPlayerSpawn(player.getUuid()));
+      player.setGameMode(GameMode.ADVENTURE);
 
       // todo: make this a manageable resource, not hardcoded
       NBS nbs = new NBS(Path.of("./tanks_game_song.nbs"));
@@ -81,7 +85,7 @@ public class TankGameSpace extends GameSpace {
 
       // if the player moved in the x, z, or y direction, update the physics
       if (diff.x() != 0 || diff.z() != 0 || diff.y() != 0) {
-//        event.setCancelled(true);
+        event.setCancelled(true);
       }
 
       // if the player moving is not the current turn, do nothing
@@ -107,11 +111,33 @@ public class TankGameSpace extends GameSpace {
           return;
         }
 
+        Vec newTurretVector = targetState.turretVector().add(0, 0, -Math.PI / 48);
+
+        double zTranslatedToContextOfPlayer =
+            TankGameSpaceCalculationUtils.translateTurretAngleIntoContextOfPlayerTurn(
+                board.currentTurn(), newTurretVector.z());
+
+        if (zTranslatedToContextOfPlayer > BoardAndSpaceConstants.MAX_Z_TURRET_ANGLE ||
+            zTranslatedToContextOfPlayer < BoardAndSpaceConstants.MIN_Z_TURRET_ANGLE) {
+          return;
+        }
+
         // rotate the turret on the negative unit circle
         targetState.turretVector(targetState.turretVector().add(0, 0, -Math.PI / 48));
         turnTracker.incrementTurretRotationMoves();
       } else if (direction == PlayerMovementDirection.BACKWARD) {
         if (turnTracker.hasMaxTurretRotationMoves()) {
+          return;
+        }
+
+        Vec newTurretVector = targetState.turretVector().add(0, 0, Math.PI / 48);
+
+        double zTranslatedToContextOfPlayer =
+            TankGameSpaceCalculationUtils.translateTurretAngleIntoContextOfPlayerTurn(
+                board.currentTurn(), newTurretVector.z());
+
+        if (zTranslatedToContextOfPlayer > BoardAndSpaceConstants.MAX_Z_TURRET_ANGLE ||
+            zTranslatedToContextOfPlayer < BoardAndSpaceConstants.MIN_Z_TURRET_ANGLE) {
           return;
         }
 
@@ -135,21 +161,30 @@ public class TankGameSpace extends GameSpace {
         targetTank.velocity(targetTank.velocity().add(0.2, 0, 0));
         turnTracker.incrementPositionMoves();
       }
+    }).addListener(PlayerHandAnimationEvent.class, event -> {
+      Player player = event.getPlayer();
+      // if it's not the player's turn, do nothing
+      if (!board.isTurn(player.getUuid())) {
+        return;
+      }
 
-      // if the player moved in the y direction
-//      if (oldPosition.y() != newPosition.y()) {
-//        // fire the tank turret
-//        Pos explosionPosition = targetTank.position();
-//
-//        // fire the tank turret
-//
-//        ParticlePacket particlePacket =
-//            ParticleCreator.createParticlePacket(Particle.EXPLOSION, explosionPosition.x(),
-//                explosionPosition.y(), explosionPosition.z(), 0f, 0f, 0f, 1);
-//        sendGroupedPacket(particlePacket);
-//        // play the explosion sound
-//        playSound(Sound.sound(Key.key("entity.generic.explode"), Sound.Source.MASTER, 1f, 1f));
-//      }
+      // get the block location that the player is looking at
+      Point point = player.getTargetBlockPosition(100);
+
+      if (point == null) {
+        return;
+      }
+
+      // if the player clicked on the firing power bar
+      if (TankGameSpaceCalculationUtils.clickedBlockIsOnFiringPowerBar(point,
+          board.currentTurn())) {
+        // get the firing power that the player clicked on
+        double firingPower = TankGameSpaceCalculationUtils.getFiringPowerBasedOnBlock(point,
+            board.currentTurn());
+
+        // set the firing power
+        board.turnTracker().setFiringPower(firingPower);
+      }
     });
   }
 }

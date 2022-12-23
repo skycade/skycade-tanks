@@ -1,4 +1,4 @@
-package net.skycade.tanks.board;
+package net.skycade.tanks.board.turn;
 
 /**
  * Represents a turn in a game of Tanks.
