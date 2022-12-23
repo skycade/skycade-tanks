@@ -2,9 +2,13 @@ package net.skycade.tanks.space;
 
 import dev.emortal.nbstom.NBS;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.UUID;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minestom.server.MinecraftServer;
+import net.minestom.server.adventure.audience.Audiences;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
@@ -43,6 +47,8 @@ public class TankGameSpace extends GameSpace {
    */
   private final TankGameBoard board;
 
+  private BossBar previousBossBar;
+
   public TankGameSpace(TankGameBoard board) {
     super(UUID.randomUUID(), FullbrightDimension.INSTANCE);
     this.boardRenderer = new GameSpaceTankGameBoardRenderer(this, board);
@@ -67,6 +73,21 @@ public class TankGameSpace extends GameSpace {
     scheduleNextTick((instance) -> {
       // initialize the board through the board renderer
       boardRenderer.initializeBoard();
+
+      MinecraftServer.getSchedulerManager().buildTask(() -> {
+        final long ramUsage =
+            (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024;
+        if (this.previousBossBar != null) {
+          Audiences.players().hideBossBar(this.previousBossBar);
+        }
+        this.previousBossBar = BossBar.bossBar(
+            Component.text("RAM usage: " + ramUsage + " MB", NamedTextColor.RED),
+            1.0f,
+            BossBar.Color.RED,
+            BossBar.Overlay.PROGRESS
+        );
+        Audiences.players().showBossBar(this.previousBossBar);
+      }).delay(Duration.ofMillis(500)).schedule();
 
       // every tick, render the next frame of the board
       eventNode().addListener(InstanceTickEvent.class, event -> {
