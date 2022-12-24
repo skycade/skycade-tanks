@@ -1,19 +1,22 @@
 package net.skycade.tanks.board;
 
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.utils.Direction;
 
 public class BoardAndSpaceConstants {
+
 
   /**
    * The spawn point for player 1.
    */
-  public static final Pos PLAYER_1_SPAWN_POSITION = new Pos(0, 25, 23, -180, 0);
+  public static final Pos PLAYER_1_SPAWN_POSITION = new Pos(0, 19.5, 24, -180, 0);
 
   /**
    * The spawn point for player 2.
    */
-  public static final Pos PLAYER_2_SPAWN_POSITION = new Pos(0, 25, -23, 0, 0);
+  public static final Pos PLAYER_2_SPAWN_POSITION = new Pos(0, 19.5, -24, 0, 0);
 
   /**
    * The bottom left corner of the board.
@@ -104,4 +107,84 @@ public class BoardAndSpaceConstants {
    * The block to be used when the firing power is high.
    */
   public static final Block FIRING_POWER_SPECIFIED_HIGH = Block.RED_CONCRETE;
+
+  /**
+   * Player 2 move left sign position.
+   */
+  public static final Pos PLAYER_2_MOVE_LEFT_SIGN_POSITION = new Pos(1, 19, -23);
+
+  /**
+   * Player 2 aim up sign position.
+   */
+  public static final Pos PLAYER_2_AIM_UP_SIGN_POSITION = new Pos(0, 19, -23);
+
+  /**
+   * Player 2 aim down sign position.
+   */
+  public static final Pos PLAYER_2_AIM_DOWN_SIGN_POSITION = new Pos(-1, 19, -23);
+
+  /**
+   * Player 2 move right sign position.
+   */
+  public static final Pos PLAYER_2_MOVE_RIGHT_SIGN_POSITION = new Pos(-2, 19, -23);
+
+  /**
+   * Player 2 main sign direction.
+   */
+  public static final Direction PLAYER_2_MAIN_SIGN_DIRECTION = Direction.NORTH;
+
+  /**
+   * Player 2 fire sign direction.
+   */
+  public static final Direction PLAYER_2_FIRE_SIGN_DIRECTION = Direction.WEST;
+
+  public static final Point PLAYER_2_MOVE_LEFT_BUTTON_POINT = new Pos(1, 20, -22);
+
+  public static final Point PLAYER_2_AIM_UP_BUTTON_POINT = new Pos(0, 20, -22);
+
+  public static final Point PLAYER_2_AIM_DOWN_BUTTON_POINT = new Pos(-1, 20, -22);
+
+  public static final Point PLAYER_2_MOVE_RIGHT_BUTTON_POINT = new Pos(-2, 20, -22);
+
+  public static final Point PLAYER_2_FIRE_BUTTON_POINT = new Pos(2, 20, -24);
+
+  /**
+   * Player 1 move left sign position.
+   */
+  public static final Pos PLAYER_1_MOVE_LEFT_SIGN_POSITION = new Pos(-2, 19, 22);
+
+  /**
+   * Player 1 aim up sign position.
+   */
+  public static final Pos PLAYER_1_AIM_UP_SIGN_POSITION = new Pos(-1, 19, 22);
+
+  /**
+   * Player 1 aim down sign position.
+   */
+  public static final Pos PLAYER_1_AIM_DOWN_SIGN_POSITION = new Pos(0, 19, 22);
+
+  /**
+   * Player 1 move right sign position.
+   */
+  public static final Pos PLAYER_1_MOVE_RIGHT_SIGN_POSITION = new Pos(1, 19, 22);
+
+  /**
+   * Player 1 main sign direction.
+   */
+  public static final Direction PLAYER_1_MAIN_SIGN_DIRECTION = Direction.SOUTH;
+
+  /**
+   * Player 1 fire sign direction.
+   */
+  public static final Direction PLAYER_1_FIRE_SIGN_DIRECTION = Direction.EAST;
+
+  public static final Point PLAYER_1_MOVE_LEFT_BUTTON_POINT = new Pos(-2, 20, 21);
+
+  public static final Point PLAYER_1_AIM_UP_BUTTON_POINT = new Pos(-1, 20, 21);
+
+  public static final Point PLAYER_1_AIM_DOWN_BUTTON_POINT = new Pos(0, 20, 21);
+
+  public static final Point PLAYER_1_MOVE_RIGHT_BUTTON_POINT = new Pos(1, 20, 21);
+
+  public static final Point PLAYER_1_FIRE_BUTTON_POINT = new Pos(-3, 20, 23);
 }

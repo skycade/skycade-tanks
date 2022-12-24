@@ -9,10 +9,12 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.utils.NamespaceID;
 import net.skycade.serverruntime.api.Game;
 import net.skycade.serverruntime.api.ServerRuntime;
 import net.skycade.serverruntime.api.event.EventHandler;
 import net.skycade.tanks.command.GamemodeCommand;
+import net.skycade.tanks.handler.MinecraftSignHandler;
 import net.skycade.tanks.session.SessionCoordinator;
 import net.skycade.tanks.session.TankGameSession;
 import net.skycade.tanks.space.SessionGameSpaceCoordinator;
@@ -34,6 +36,12 @@ public class SkycadeTanksBootstrapper extends Game {
    */
   public SkycadeTanksBootstrapper() {
     this.init();
+  }
+
+  @Override
+  public void onCompleteStartup() {
+    MinecraftServer.getBlockManager()
+        .registerHandler(NamespaceID.from("minecraft:sign"), MinecraftSignHandler::new);
   }
 
   /**
