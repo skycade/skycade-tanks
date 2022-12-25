@@ -121,8 +121,7 @@ public class TankGameSpace extends GameSpace {
       TankBoardControl control =
           TankBoardControlUtils.getControlFromClickedButtonPosition(position, board.currentTurn());
 
-      // if the player moved forward
-      if (control == TankBoardControl.AIM_UP) {
+      if (control == TankBoardControl.AIM_DOWN) {
         if (turnTracker.hasMaxTurretRotationMoves()) {
           return;
         }
@@ -141,7 +140,7 @@ public class TankGameSpace extends GameSpace {
         // rotate the turret on the negative unit circle
         targetState.turretVector(targetState.turretVector().add(0, 0, -Math.PI / 48));
         turnTracker.incrementTurretRotationMoves();
-      } else if (control == TankBoardControl.AIM_DOWN) {
+      } else if (control == TankBoardControl.AIM_UP) {
         if (turnTracker.hasMaxTurretRotationMoves()) {
           return;
         }
