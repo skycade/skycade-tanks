@@ -92,10 +92,41 @@ public class TankTurnTracker {
   }
 
   /**
-   * Sets the firing power of the tank.
+   * If the firing power is at max
+   *
+   * @return true if the firing power is at max
    */
-  public void setFiringPower(double firingPower) {
-    this.firingPower = firingPower;
+  public boolean isAtMaxFiringPower() {
+    return firingPower >= BoardAndSpaceConstants.MAX_FIRING_POWER;
+  }
+
+  /**
+   * If the firing power is at min
+   *
+   * @return true if the firing power is at min
+   */
+  public boolean isAtMinFiringPower() {
+    return firingPower <= BoardAndSpaceConstants.MIN_FIRING_POWER;
+  }
+
+  /**
+   * Increments the firing power.
+   */
+  public void incrementFiringPower() {
+    // get the max and min, and increment the firing power by 1/10th of the difference
+    double max = BoardAndSpaceConstants.MAX_FIRING_POWER;
+    double min = BoardAndSpaceConstants.MIN_FIRING_POWER;
+    firingPower += (max - min) / 10;
+  }
+
+  /**
+   * Decrements the firing power.
+   */
+  public void decrementFiringPower() {
+    // get the max and min, and decrement the firing power by 1/10th of the difference
+    double max = BoardAndSpaceConstants.MAX_FIRING_POWER;
+    double min = BoardAndSpaceConstants.MIN_FIRING_POWER;
+    firingPower -= (max - min) / 10;
   }
 
   /**

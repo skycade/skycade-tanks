@@ -12,7 +12,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.adventure.audience.Audiences;
 import net.minestom.server.coordinate.Point;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.InstanceTickEvent;
@@ -23,16 +22,9 @@ import net.minestom.server.instance.block.Block;
 import net.minestom.server.timer.TaskSchedule;
 import net.skycade.serverruntime.api.space.GameSpace;
 import net.skycade.serverruntime.space.dimension.FullbrightDimension;
-import net.skycade.tanks.board.BoardAndSpaceConstants;
 import net.skycade.tanks.board.TankGameBoard;
-import net.skycade.tanks.board.control.TankBoardControl;
-import net.skycade.tanks.board.control.TankBoardControlUtils;
+import net.skycade.tanks.board.control.TanksControllerHandler;
 import net.skycade.tanks.board.renderer.GameSpaceTankGameBoardRenderer;
-import net.skycade.tanks.board.turn.BoardTurn;
-import net.skycade.tanks.board.turn.TankState;
-import net.skycade.tanks.board.turn.TankTurnTracker;
-import net.skycade.tanks.physics.tank.TankObject;
-import net.skycade.tanks.space.utils.TankGameSpaceCalculationUtils;
 
 /**
  * This game space is used for the tank game.
@@ -49,12 +41,18 @@ public class TankGameSpace extends GameSpace {
    */
   private final TankGameBoard board;
 
+  /**
+   * The control handler for the board.
+   */
+  private final TanksControllerHandler controllerHandler;
+
   private BossBar previousBossBar;
 
   public TankGameSpace(TankGameBoard board) {
     super(UUID.randomUUID(), FullbrightDimension.INSTANCE);
     this.boardRenderer = new GameSpaceTankGameBoardRenderer(this, board);
     this.board = board;
+    this.controllerHandler = new TanksControllerHandler(board, this);
   }
 
   @Override
@@ -96,11 +94,6 @@ public class TankGameSpace extends GameSpace {
 
     eventNode().addListener(PlayerBlockInteractEvent.class, event -> {
       Player player = event.getPlayer();
-      // if it's not the player's turn, do nothing
-      if (!board.isTurn(player.getUuid())) {
-        return;
-      }
-
       Block block = event.getBlock();
       Point position = event.getBlockPosition();
 
@@ -108,74 +101,9 @@ public class TankGameSpace extends GameSpace {
         return;
       }
 
-      // handle button press behavior
+      this.controllerHandler.onButtonClick(position, player);
+      // handle button press behavior (e.g. setting to an unpowered state after a delay)
       handleButtonClickBehavior(block, position);
-
-      TankTurnTracker turnTracker = board.turnTracker();
-
-      TankState targetState = board.currentTurn() == BoardTurn.PLAYER_1 ? board.player1TankState() :
-          board.player2TankState();
-      TankObject targetTank =
-          board.currentTurn() == BoardTurn.PLAYER_1 ? board.player1Tank() : board.player2Tank();
-
-      TankBoardControl control =
-          TankBoardControlUtils.getControlFromClickedButtonPosition(position, board.currentTurn());
-
-      if (control == TankBoardControl.AIM_DOWN) {
-        if (turnTracker.hasMaxTurretRotationMoves()) {
-          return;
-        }
-
-        Vec newTurretVector = targetState.turretVector().add(0, 0, -Math.PI / 48);
-
-        double zTranslatedToContextOfPlayer =
-            TankGameSpaceCalculationUtils.translateTurretAngleIntoContextOfPlayerTurn(
-                board.currentTurn(), newTurretVector.z());
-
-        if (zTranslatedToContextOfPlayer > BoardAndSpaceConstants.MAX_Z_TURRET_ANGLE ||
-            zTranslatedToContextOfPlayer < BoardAndSpaceConstants.MIN_Z_TURRET_ANGLE) {
-          return;
-        }
-
-        // rotate the turret on the negative unit circle
-        targetState.turretVector(targetState.turretVector().add(0, 0, -Math.PI / 48));
-        turnTracker.incrementTurretRotationMoves();
-      } else if (control == TankBoardControl.AIM_UP) {
-        if (turnTracker.hasMaxTurretRotationMoves()) {
-          return;
-        }
-
-        Vec newTurretVector = targetState.turretVector().add(0, 0, Math.PI / 48);
-
-        double zTranslatedToContextOfPlayer =
-            TankGameSpaceCalculationUtils.translateTurretAngleIntoContextOfPlayerTurn(
-                board.currentTurn(), newTurretVector.z());
-
-        if (zTranslatedToContextOfPlayer > BoardAndSpaceConstants.MAX_Z_TURRET_ANGLE ||
-            zTranslatedToContextOfPlayer < BoardAndSpaceConstants.MIN_Z_TURRET_ANGLE) {
-          return;
-        }
-
-        // rotate the turret on the positive unit circle
-        targetState.turretVector(targetState.turretVector().add(0, 0, Math.PI / 48));
-        turnTracker.incrementTurretRotationMoves();
-      } else if (control == TankBoardControl.MOVE_LEFT) {
-        if (turnTracker.hasMaxPositionMoves()) {
-          return;
-        }
-
-        // push the tank left
-        targetTank.velocity(targetTank.velocity().add(-0.2, 0, 0));
-        turnTracker.incrementPositionMoves();
-      } else if (control == TankBoardControl.MOVE_RIGHT) {
-        if (turnTracker.hasMaxPositionMoves()) {
-          return;
-        }
-
-        // push the tank right
-        targetTank.velocity(targetTank.velocity().add(0.2, 0, 0));
-        turnTracker.incrementPositionMoves();
-      }
     });
   }
 

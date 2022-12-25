@@ -26,6 +26,12 @@ public class TankBoardControlUtils {
         return TankBoardControl.AIM_DOWN;
       } else if (buttonPoint.sameBlock(BoardAndSpaceConstants.PLAYER_1_FIRE_BUTTON_POINT)) {
         return TankBoardControl.FIRE;
+      } else if (buttonPoint.sameBlock(
+          BoardAndSpaceConstants.PLAYER_1_FIRING_POWER_INCREASE_BUTTON_POINT)) {
+        return TankBoardControl.INCREASE_POWER;
+      } else if (buttonPoint.sameBlock(
+          BoardAndSpaceConstants.PLAYER_1_FIRING_POWER_DECREASE_BUTTON_POINT)) {
+        return TankBoardControl.DECREASE_POWER;
       }
     } else {
       if (buttonPoint.sameBlock(BoardAndSpaceConstants.PLAYER_2_MOVE_LEFT_BUTTON_POINT)) {
@@ -38,6 +44,12 @@ public class TankBoardControlUtils {
         return TankBoardControl.AIM_DOWN;
       } else if (buttonPoint.sameBlock(BoardAndSpaceConstants.PLAYER_2_FIRE_BUTTON_POINT)) {
         return TankBoardControl.FIRE;
+      } else if (buttonPoint.sameBlock(
+          BoardAndSpaceConstants.PLAYER_2_FIRING_POWER_INCREASE_BUTTON_POINT)) {
+        return TankBoardControl.INCREASE_POWER;
+      } else if (buttonPoint.sameBlock(
+          BoardAndSpaceConstants.PLAYER_2_FIRING_POWER_DECREASE_BUTTON_POINT)) {
+        return TankBoardControl.DECREASE_POWER;
       }
     }
 

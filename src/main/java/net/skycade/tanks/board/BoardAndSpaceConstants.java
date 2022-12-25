@@ -3,7 +3,6 @@ package net.skycade.tanks.board;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.utils.Direction;
 
 public class BoardAndSpaceConstants {
 
@@ -108,15 +107,6 @@ public class BoardAndSpaceConstants {
    */
   public static final Block FIRING_POWER_SPECIFIED_HIGH = Block.RED_CONCRETE;
 
-  public static final Point PLAYER_2_MOVE_LEFT_BUTTON_POINT = new Pos(1, 20, -22);
-
-  public static final Point PLAYER_2_AIM_UP_BUTTON_POINT = new Pos(0, 20, -22);
-
-  public static final Point PLAYER_2_AIM_DOWN_BUTTON_POINT = new Pos(-1, 20, -22);
-
-  public static final Point PLAYER_2_MOVE_RIGHT_BUTTON_POINT = new Pos(-2, 20, -22);
-
-  public static final Point PLAYER_2_FIRE_BUTTON_POINT = new Pos(2, 20, -24);
 
   public static final Point PLAYER_1_MOVE_LEFT_BUTTON_POINT = new Pos(-2, 20, 21);
 
@@ -127,4 +117,22 @@ public class BoardAndSpaceConstants {
   public static final Point PLAYER_1_MOVE_RIGHT_BUTTON_POINT = new Pos(1, 20, 21);
 
   public static final Point PLAYER_1_FIRE_BUTTON_POINT = new Pos(-3, 20, 23);
+
+  public static final Point PLAYER_1_FIRING_POWER_INCREASE_BUTTON_POINT = new Pos(-3, 22, 23);
+
+  public static final Point PLAYER_1_FIRING_POWER_DECREASE_BUTTON_POINT = new Pos(-3, 21, 23);
+
+  public static final Point PLAYER_2_MOVE_LEFT_BUTTON_POINT = new Pos(1, 20, -22);
+
+  public static final Point PLAYER_2_AIM_UP_BUTTON_POINT = new Pos(0, 20, -22);
+
+  public static final Point PLAYER_2_AIM_DOWN_BUTTON_POINT = new Pos(-1, 20, -22);
+
+  public static final Point PLAYER_2_MOVE_RIGHT_BUTTON_POINT = new Pos(-2, 20, -22);
+
+  public static final Point PLAYER_2_FIRE_BUTTON_POINT = new Pos(2, 20, -24);
+
+  public static final Point PLAYER_2_FIRING_POWER_INCREASE_BUTTON_POINT = new Pos(2, 22, -24);
+
+  public static final Point PLAYER_2_FIRING_POWER_DECREASE_BUTTON_POINT = new Pos(2, 21, -24);
 }
